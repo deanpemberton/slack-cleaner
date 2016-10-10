@@ -83,7 +83,6 @@ def get_id_by_name(list_dict, key_name):
 
 def purge_channels(time_range, user_id=None, bot=False):
 
-    print "Who is the user: ", user_id
     for c in channel_dict:
         print "Cleaning Channel: ",channel_dict[c]
         clean_channel(c, time_range, user_id, args.bot)
@@ -106,7 +105,6 @@ def clean_channel(channel_id, time_range, user_id=None, bot=False):
     elif args.mpdirect_name:
         _api_end_point = slack.mpim.history
 
-    print "Cleaning channel inside: ", channel_id, "(", channel_dict[channel_id], ")"
 
     has_more = True
     while has_more:
