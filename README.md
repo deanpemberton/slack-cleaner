@@ -29,7 +29,7 @@ slack-cleaner --token <TOKEN> --message --group hr --user "*"
 slack-cleaner --token <TOKEN> --message --direct sherry --user johndoe
 
 # Delete all messages from a multiparty direct message channel
-slack-cleaner --token <TOKEN> --message --mpdirect sherry,james --user "*" 
+slack-cleaner --token <TOKEN> --message --mpdirect sherry,james --user "*"
 
 # Delete all messages from certain user
 slack-cleaner --token <TOKEN> --message --channel gossip --user johndoe
@@ -39,6 +39,9 @@ slack-cleaner --token <TOKEN> --message --channel auto-build --bot
 
 # Delete all messages older than 2015/09/19
 slack-cleaner --token <TOKEN> --message --channel general --user "*" --before 20150919
+
+# Purge messages from all channels for a user
+slack-cleaner --token <TOKEN> --message --purge yes --user johndoe
 
 # Always have a look at help message
 slack-cleaner --help

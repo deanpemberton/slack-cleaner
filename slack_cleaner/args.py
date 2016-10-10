@@ -28,6 +28,8 @@ class Args():
 
         # Channel, DM or group
         g_chan = p.add_mutually_exclusive_group(required=True)
+        g_chan.add_argument('--purge',
+                            help='Purge messages from all channels')
         g_chan.add_argument('--channel',
                             help='Channel name\'s, e.g., general')
         g_chan.add_argument('--direct',
@@ -61,11 +63,12 @@ class Args():
         self.delete_message = args.message
         self.delete_file = args.file
 
+        self.purge_name = args.purge
         self.channel_name = args.channel
         self.direct_name = args.direct
         self.group_name = args.group
         self.mpdirect_name = args.mpdirect
-        
+
         self.user_name = args.user
         self.bot = args.bot
         self.start_time = args.after

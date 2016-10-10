@@ -46,6 +46,9 @@ logger.info('Running slack-cleaner v' + __version__)
 # User dict
 user_dict = {}
 
+# Channel dict
+channel_dict = {}
+
 
 # Construct a local user dict for further usage
 def init_user_dict():
@@ -60,12 +63,30 @@ def init_user_dict():
 # Init user dict
 init_user_dict()
 
+# Construct a local channel dict for further usage
+def init_channel_dict():
+    res = slack.channels.list().body
+    if not res['ok']:
+        return
+    channels = res['channels']
+
+    for c in channels:
+        channel_dict[c['id']] = c['name']
+
+# Init channel dict
+init_channel_dict()
 
 def get_id_by_name(list_dict, key_name):
     for d in list_dict:
         if d['name'] == key_name:
             return d['id']
 
+def purge_channels(time_range, user_id=None, bot=False):
+
+    print "Who is the user: ", user_id
+    for c in channel_dict:
+        print "Cleaning Channel: ",channel_dict[c]
+        clean_channel(c, time_range, user_id, args.bot)
 
 def clean_channel(channel_id, time_range, user_id=None, bot=False):
     # Setup time range for query
@@ -74,7 +95,9 @@ def clean_channel(channel_id, time_range, user_id=None, bot=False):
 
     _api_end_point = None
     # Set to the right API end point
-    if args.channel_name:
+    if args.purge_name:
+        _api_end_point = slack.channels.history
+    elif args.channel_name:
         _api_end_point = slack.channels.history
     elif args.direct_name:
         _api_end_point = slack.im.history
@@ -82,6 +105,8 @@ def clean_channel(channel_id, time_range, user_id=None, bot=False):
         _api_end_point = slack.groups.history
     elif args.mpdirect_name:
         _api_end_point = slack.mpim.history
+
+    print "Cleaning channel inside: ", channel_id, "(", channel_dict[channel_id], ")"
 
     has_more = True
     while has_more:
@@ -169,12 +194,9 @@ def get_user_id_by_name(name):
 
 
 def get_channel_id_by_name(name):
-    res = slack.channels.list().body
-    if not res['ok']:
-        return
-    channels = res['channels']
-    if len(channels) > 0:
-        return get_id_by_name(channels, name)
+    for k, v in channel_dict.iteritems():
+        if v == name:
+            return k
 
 
 def get_direct_id_by_name(name):
@@ -201,7 +223,7 @@ def get_mpdirect_id_by_name(name):
 
     if len(mpims) > 0:
         for mpim in mpims:
-            # match the mpdirect user ids 
+            # match the mpdirect user ids
             if set(mpim['members']) == members:
                 return mpim['id']
 
@@ -218,24 +240,6 @@ def message_cleaner():
     _channel_id = None
     _user_id = None
 
-    # If channel's name is supplied
-    if args.channel_name:
-        _channel_id = get_channel_id_by_name(args.channel_name)
-
-    # If DM's name is supplied
-    if args.direct_name:
-        _channel_id = get_direct_id_by_name(args.direct_name)
-
-    # If channel's name is supplied
-    if args.group_name:
-        _channel_id = get_group_id_by_name(args.group_name)
-
-    # If group DM's name is supplied
-    if args.mpdirect_name:
-        _channel_id = get_mpdirect_id_by_name(args.mpdirect_name)
-
-    if _channel_id is None:
-        sys.exit('Channel, direct message or private group not found')
 
     # If user's name is also supplied
     if args.user_name:
@@ -248,8 +252,31 @@ def message_cleaner():
         if _user_id is None:
             sys.exit('User not found')
 
-    # Delete messages on certain channel
-    clean_channel(_channel_id, time_range, _user_id, args.bot)
+    if args.purge_name:
+        purge_channels(time_range, _user_id, args.bot)
+    else:
+        # If channel's name is supplied
+        if args.channel_name:
+            _channel_id = get_channel_id_by_name(args.channel_name)
+
+        # If DM's name is supplied
+        if args.direct_name:
+            _channel_id = get_direct_id_by_name(args.direct_name)
+
+        # If channel's name is supplied
+        if args.group_name:
+            _channel_id = get_group_id_by_name(args.group_name)
+
+        # If group DM's name is supplied
+        if args.mpdirect_name:
+            _channel_id = get_mpdirect_id_by_name(args.mpdirect_name)
+
+        if _channel_id is None:
+            sys.exit('Channel, direct message or private group not found')
+
+
+        # Delete messages on certain channel
+        clean_channel(_channel_id, time_range, _user_id, args.bot)
 
 
 def file_cleaner():
